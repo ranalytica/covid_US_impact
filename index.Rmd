@@ -1,0 +1,261 @@
+---
+title: "Electrifying your investment"
+author: "Richard Nacianceno"
+date: "6/30/2020"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(COVID19)
+library(tidyquant)
+library(plotly)
+library(tidyverse)
+library(cowplot)
+```
+
+## Effects of COVID19 in the US
+
+The world has change since Covid19 entered our world in January 2020.  For the very first time, in a hundred years the United States is going through its first pandemic. In this presentation, we will observe the following:
+
+- COVID19 Cases
+- Economic effect
+- Air Quality effect
+
+## US COVID19 Confirmed Cases 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+US <- covid19("US", level = 1, verbose = FALSE)
+ggplotly(
+  ggplot(data = US, aes(
+    x = date, y = (confirmed / 10 ^ 6)
+  )) +
+    geom_line() + geom_text(aes(
+      y = 2,
+      x = date("2020-05-01"),
+      label = "Confirmed (in millions)"
+    )) +
+    labs(x = "Months", y = "Confirmed (in millions)") +
+    geom_line(aes(y = deaths / 100000), color = "maroon", alpha = .5) +
+    geom_text(
+      aes(
+        y = 1.39,
+        x = date("2020-06-11"),
+        
+        label = "Deaths (in 100,000th)"
+      ), color = "maroon"
+    ) +
+    geom_line(
+      aes(y = recovered / 10 ^ 6),
+      color = "blue",
+      alpha = .5,
+      label = "recovered"
+    ) +
+    geom_text(aes(
+      y = .80,
+      x = date("2020-06-09"),
+      label = "Recovered (in millions)"
+    ), color = "blue") + theme(legend.position = "none") + xlim(date("2020-01-31"), date("2020-07-06")) +
+    ylim(0, 3)
+)
+```
+
+## US Unemployment from 1950-2020
+
+```{r cars, echo = FALSE, message=FALSE}
+UR <- tq_get("UNRATE", get = "economic.data", from = "1950-01-01")
+ggplotly(ggplot(data = UR, aes(x=date, y=price))+geom_line()+labs(x="Date", y="Rate"))
+```
+
+
+```{r echo=FALSE}
+## download state UR
+## If we need the code for story telling by state
+all_states <- function(state_code) {
+  fred_code <- str_c(state_code, "UR")
+  
+  tq_get(fred_code, get = "economic.data",
+         from = "1950-01-01") %>%
+  mutate(state = state_code)  
+}
+all_state_ur <- map_dfr(state.abb, all_states)
+```
+
+## US Gross Domestic Product
+
+```{r echo=FALSE}
+GDP <- tq_get("GDP", get = "economic.data", from = "2016-01-01")
+ggplotly(ggplot(data = GDP, aes(x=date, y=price))+geom_line()+labs(x="Year", y="Date"))
+```
+
+## PM2.5 (March thru June)
+
+```{r message = FALSE, echo = FALSE, warning = FALSE, results='hide'}
+cali_2019 <- read.csv("Cali_2019.csv")
+cali_2020 <- read.csv("Cali_2020.csv")
+naAnalysis <- cali_2020 %>%
+  purrr::map_df(function(x)
+    round(mean(is.na(x)), digits = 2) * 100) %>%
+  gather(EVType, naAverage)
+
+# missing data graph:
+# naAnalysis %>% ggplot(aes(x = cali_2020, y = naAverage)) + geom_point(aes(reorder(EVType, naAverage))) + 
+# theme(axis.text.x =element_text(angle = 90, hjust = .1)) + labs(x = "Event Type",
+# y = "NA Average  (%)", title = "Missing Data Analysis")
+```
+
+
+```{r message = FALSE, echo = FALSE, warning = FALSE}
+cali_2019 <- cali_2019 %>%  select(-CBSA_CODE)
+cali_2020 <- cali_2020 %>%  select(-CBSA_CODE)
+
+sf_2019 <-
+  cali_2019 %>% dplyr::filter(CBSA_NAME == "San Francisco-Oakland-Hayward, CA") %>% dplyr::filter(Date < "07/01/2019")
+
+sf_2019 <-
+  sf_2019 %>% dplyr::filter(CBSA_NAME == "San Francisco-Oakland-Hayward, CA") %>% 
+  dplyr::filter(Date >= "03-01-2019")
+
+sf_2020 <-
+  cali_2020 %>% dplyr::filter(CBSA_NAME == "San Francisco-Oakland-Hayward, CA") %>% 
+  dplyr::filter(Date < "07/01/2020")
+
+sf_2020 <-
+  sf_2020 %>% dplyr::filter(CBSA_NAME == "San Francisco-Oakland-Hayward, CA") %>% 
+  dplyr::filter(Date >= "03-01-2019")
+
+
+g1 <-
+  plot_ly(sf_2019,
+          y = sf_2019$Daily.Mean.PM2.5.Concentration,
+          type = "box") %>%
+  add_annotations(
+    x = -.2,
+    y = 17,
+    xref = "x",
+    yref = "y",
+    text = "2019",
+    showarrow = F,
+    ax = 20,
+    ay = -40
+  )
+
+g2 <-
+  plot_ly(sf_2020,
+          y = sf_2020$Daily.Mean.PM2.5.Concentration,
+          type = "box") %>%
+  add_annotations(
+    x = -.2,
+    y = 17,
+    xref = "x",
+    yref = "y",
+    text = "2020",
+    showarrow = F,
+    ax = 20,
+    ay = -40
+  )
+
+subplot(g1, g2)
+```
+
+## PM2.5  PM2.5 (March thru June)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(lubridate)
+sf_2019$Date <- mdy(sf_2019$Date) 
+sf_2020$Date <- mdy(sf_2020$Date)
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+g3 <- ggplot(data = sf_2019, aes(x=Date, y = Daily.Mean.PM2.5.Concentration))+geom_line()+geom_smooth()+ geom_text(aes(
+      y = 15,
+      x = date("2019-03-01"),
+      label = "2019", size=20
+    ))
+g4 <- ggplot(data = sf_2020, aes(x=Date, y = Daily.Mean.PM2.5.Concentration))+geom_line()+geom_smooth(data = sf_2020,  se=T)+geom_text(aes(
+      y = 15,
+      x = date("2020-03-01"),
+      label = "2020", size=20
+    ))
+
+subplot(g3,g4, nrows = 2)
+```
+
+## PM2.5  PM2.5 (March thru June)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+sf_2019 <- sf_2019 %>% mutate(M.no=month(Date))
+sf_2020 <- sf_2020 %>% mutate(M.no=month(Date))
+g5 <- ggplot(data = sf_2019, 
+       aes(Daily.Mean.PM2.5.Concentration,fill=as.factor(M.no), alpha=.5))+
+        geom_density(position = "stack")+theme(legend.position = "none")+ylim(0,.7)+xlim(0,16)+
+        geom_text(aes(
+      y = .6,
+      x = 13,
+      label = "2019", size=20
+    ))
+
+
+g6 <- ggplot(data = sf_2020, 
+       aes(Daily.Mean.PM2.5.Concentration,fill=as.factor(M.no), alpha=.5))+
+        geom_density(position = "stack")+theme(legend.position = "none")+ylim(0,.7)+xlim(0,16)+
+  geom_text(aes(
+      y = .6,
+      x = 13,
+      label = "2020", size=20
+    ))
+
+subplot(g5,g6)
+```
+
+## Investment Opportunity
+
+```{r}
+library(quantmod)
+
+Stock3.func <- function(){
+  require(quantmod)
+  google <- rownames_to_column(data.frame(getSymbols("GOOG", auto.assign = FALSE)))
+  facebook <- rownames_to_column(data.frame(getSymbols("FB", auto.assign = FALSE)))
+  twitter <- rownames_to_column(data.frame(getSymbols("TWTR", auto.assign = FALSE)))
+  amazon <- rownames_to_column(data.frame(getSymbols("AMZN", auto.assign = FALSE)))
+  msft <- rownames_to_column(data.frame(getSymbols("MSFT", auto.assign = FALSE)))
+  apple <- rownames_to_column(data.frame(getSymbols("AAPL", auto.assign = FALSE)))
+  bind_rows(google, facebook,amazon, apple, twitter, msft)
+}# Data Analysis Steps
+Stock3.func() %>%
+  gather(measures, value, -rowname, na.rm = TRUE) %>%
+  separate(measures, into = c("symbol", "measure"), sep = "\\.", remove = TRUE, convert = FALSE, extra = "drop", fill = "right") %>%
+  spread(measure, value) %>%
+  rename(date = rowname)
+
+
+ google <- rownames_to_column(data.frame(getSymbols("GOOG", auto.assign = FALSE)))
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
