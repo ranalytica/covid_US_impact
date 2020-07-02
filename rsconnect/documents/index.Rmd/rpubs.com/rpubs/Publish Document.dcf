@@ -1,0 +1,10 @@
+name: Publish Document
+title:
+username:
+account: rpubs
+server: rpubs.com
+hostUrl: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/634265/b2a31783747743349b0e6a1cd9faafa7
+bundleId: https://api.rpubs.com/api/v1/document/634265/b2a31783747743349b0e6a1cd9faafa7
+url: http://rpubs.com/Ranalytica/634265
+when: 1593633743.45703
