@@ -16,11 +16,12 @@ library(cowplot)
 
 ## Effects of COVID19 in the US
 
-The world has change since Covid19 entered our world in January 2020.  For the very first time, in a hundred years the United States is going through its first pandemic. In this presentation, we will observe the following:
+The world has change since Covid19 entered our world.  For the very first time, in a hundred years the United States is going through its first pandemic. In this presentation, we will observe the following:
 
 - COVID19 Cases
 - Economic effect
 - Air Quality effect
+- Summary
 
 ## US COVID19 Confirmed Cases 
 
@@ -74,7 +75,7 @@ SPY <- tidyquant::tq_get("SPY", from = "2020-01-01")
 ggplot()+
   geom_line(data = SPY, aes(x=date, y=close))+
   geom_line(data=UR, aes(x=date, y=price*10 +200), color="blue")+
-  scale_y_continuous(name="SPY", limit=c(200,350), sec.axis = sec_axis(trans = ~(.-200)/10, name="UR"))
+  scale_y_continuous(name="SPY", limit=c(200,350), sec.axis = sec_axis(trans = ~(.-200)/10, name="UR"))+theme(axis.text.y.right = element_text(color="blue"), axis.title.y.right = element_text(color = "blue")  )
 ```
 
 
@@ -218,7 +219,8 @@ subplot(g5,g6)
 - Poor handling of the pandemic
 - Infection rate is growing
 - Stock Market is discounting most of the negative news
-- Air quality from March-Present 2020 vs. March-June 2019 - Opportunity to switch from petrol base technology to cleaner alternative source of energy  
+- Air quality from March-Present 2020 vs. March-June 2019 
+- Correlation and Causation
 - Rethink the way we run the economy. 
 
 ![Github](./Octocat.png) [view mycode](https://github.com/ranalytica/QuantifiedSelfMovement){target="_blank"} 
